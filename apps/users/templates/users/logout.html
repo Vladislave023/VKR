@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Выход{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card p-4">
+      <h3 class="mb-3">Выход из системы</h3>
+      <p class="text-secondary">
+        Вы действительно хотите выйти из аккаунта?
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-danger">Выйти</button>
+          <a href="/" class="btn btn-outline-secondary">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

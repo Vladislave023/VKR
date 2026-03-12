@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Подача ВКР{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card p-4">
+      <h3 class="mb-1">Подача ВКР</h3>
+      <p class="text-secondary mb-3">
+        Заполните метаданные и прикрепите один PDF-файл (≤ 100 МБ).
+      </p>
+
+      {% if form.errors %}
+        <div class="alert alert-warning">
+          Форма содержит ошибки. Обратите внимание: браузер не сохраняет выбранный файл после отправки формы —
+          если вы получили ошибки, файл нужно выбрать заново.
+        </div>
+      {% endif %}
+
+      <form id="submissionForm" method="post" enctype="multipart/form-data" novalidate data-ajax-submit="1">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="section-title">Метаданные</div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.author_full_name.label }}</label>
+            {{ form.author_full_name }}
+            <div class="form-text">Только русские буквы. Формат: Фамилия Имя Отчество.</div>
+            {% for e in form.author_full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.supervisor_full_name.label }}</label>
+            {{ form.supervisor_full_name }}
+            <div class="form-text">Только полное ФИО (инициалы запрещены).</div>
+            {% for e in form.supervisor_full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.work_title.label }}</label>
+            {{ form.work_title }}
+            <div class="form-text">Без кавычек и без капса.</div>
+            {% for e in form.work_title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.year.label }}</label>
+            {{ form.year }}
+            {% for e in form.year.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.page_count.label }}</label>
+            {{ form.page_count }}
+            {% for e in form.page_count.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.document_type.label }}</label>
+            {{ form.document_type }}
+            {% for e in form.document_type.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="soft-divider"></div>
+
+        <div class="section-title">Учебная привязка (важно заполнить по порядку)</div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">1) {{ form.education_level.label }}</label>
+            {{ form.education_level }}
+            {% for e in form.education_level.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">2) {{ form.institute.label }}</label>
+            {{ form.institute }}
+            <div class="form-text">После выбора школы будут доступны кафедры и направления.</div>
+            {% for e in form.institute.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">3) {{ form.specialty.label }}</label>
+            {{ form.specialty }}
+            <div class="form-text">Список формируется по выбранным: уровень + школа.</div>
+            {% for e in form.specialty.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">4) {{ form.department.label }}</label>
+            {{ form.department }}
+            <div class="form-text">Список кафедр зависит от выбранной школы.</div>
+            {% for e in form.department.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="soft-divider"></div>
+
+        <div class="section-title">Файл</div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.file.label }}</label>
+            {{ form.file }}
+            <div class="form-text">Только один PDF-файл (≤ 100 МБ).</div>
+            {% for e in form.file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+
+            <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
+              <span class="text-secondary small">Выбран файл:</span>
+              <span id="selectedFileName" class="small fw-semibold text-dark">—</span>
+              <button type="button" id="clearFileBtn" class="btn btn-outline-secondary btn-sm">
+                Очистить выбранный файл
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-success" type="submit">Отправить</button>
+          <a class="btn btn-outline-secondary" href="/submissions/">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/submission_live_validation.js' %}"></script>
+{% endblock %}

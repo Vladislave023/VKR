@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Заявка #{{ s.id }}{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+  <div>
+    <h2 class="mb-1">Заявка #{{ s.id }}</h2>
+    <div class="text-secondary">Создано: {{ s.created_at|date:"d.m.Y H:i" }}</div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/submissions/">Назад</a>
+    <a class="btn btn-success" href="/submissions/new/">Подать новую</a>
+  </div>
+</div>
+
+<div class="card p-4">
+  <div class="mb-4">
+    {% if s.status == "accepted" %}
+      <span class="badge text-bg-success fs-6">Принято</span>
+    {% elif s.status == "needs_fix" %}
+      <span class="badge text-bg-warning fs-6">Требует исправлений</span>
+    {% elif s.status == "submitted" %}
+      <span class="badge text-bg-primary fs-6">Отправлено</span>
+    {% else %}
+      <span class="badge text-bg-secondary fs-6">{{ s.get_status_display }}</span>
+    {% endif %}
+  </div>
+
+  {% if s.staff_comment %}
+    <div class="mb-4">
+      <div class="border rounded-4 p-3 bg-warning-subtle">
+        <div class="text-secondary small mb-1">Ответ проверяющего</div>
+        <div class="fw-semibold">{{ s.staff_comment|linebreaksbr }}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="mb-4">
+    <h4 class="mb-3">Метаданные</h4>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">ФИО автора</div>
+          <div class="fw-semibold fs-5">{{ s.author_full_name }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">ФИО руководителя</div>
+          <div class="fw-semibold fs-5">{{ s.supervisor_full_name }}</div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded-4 p-3 bg-light">
+          <div class="text-secondary small mb-1">Название работы</div>
+          <div class="fw-semibold fs-5">{{ s.work_title }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Год</div>
+          <div class="fw-semibold fs-5">{{ s.year }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Кол-во страниц</div>
+          <div class="fw-semibold fs-5">{{ s.page_count }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Тип документа</div>
+          <div class="fw-semibold fs-5">{{ s.document_type }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="soft-divider"></div>
+
+  <div class="my-4">
+    <h4 class="mb-3">Учебная привязка</h4>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Уровень образования</div>
+          <div class="fw-semibold fs-5">{{ s.education_level }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Институт/школа</div>
+          <div class="fw-semibold fs-5">{{ s.institute }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Направление/специальность</div>
+          <div class="fw-semibold fs-5">{{ s.specialty }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded-4 p-3 h-100 bg-light">
+          <div class="text-secondary small mb-1">Кафедра/департамент</div>
+          <div class="fw-semibold fs-5">
+            {% if s.department %}{{ s.department.name }}{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="soft-divider"></div>
+
+  <div class="mt-4">
+    <h4 class="mb-3">Файл</h4>
+
+    <div class="border rounded-4 p-3 bg-light">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-8">
+          <div class="text-secondary small mb-1">Имя файла</div>
+          <div class="fw-semibold fs-5">{{ s.display_file_name }}</div>
+          <div class="text-secondary small mt-1">
+            {{ s.file_extension|default:".pdf" }} · {{ s.file_size|filesizeformat }}
+          </div>
+        </div>
+
+        <div class="col-md-4 text-md-end">
+          {% if s.file %}
+            <a class="btn btn-outline-success" href="{{ s.file.url }}" target="_blank" rel="noopener">
+              Скачать PDF
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end mt-4">
+    <a class="btn btn-success px-4" href="/submissions/">Готово</a>
+  </div>
+</div>
+
+{% endblock %}

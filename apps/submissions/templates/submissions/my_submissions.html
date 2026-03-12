@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Мои заявки{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div>
+    <h3 class="mb-0">Мои заявки</h3>
+    <div class="text-secondary small">История поданных работ и их статусы.</div>
+  </div>
+  <a class="btn btn-success" href="/submissions/new/">
+    <span class="me-1">＋</span> Подать ВКР
+  </a>
+</div>
+
+<div class="card p-3">
+
+  {% if submissions %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 70px;">#</th>
+            <th>Работа</th>
+            <th style="width: 90px;">Год</th>
+            <th style="width: 160px;">Статус</th>
+            <th style="width: 140px;">Файл</th>
+            <th class="text-end" style="width: 120px;">Размер</th>
+            <th class="text-end" style="width: 170px;">Создано</th>
+            <th class="text-end" style="width: 120px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {% for s in submissions %}
+          <tr>
+            <td class="text-secondary fw-semibold">#{{ s.id }}</td>
+
+            <td>
+              <div class="fw-semibold">{{ s.work_title }}</div>
+
+              <div class="text-secondary small">
+                {{ s.document_type }} · {{ s.education_level }} · {{ s.institute }}
+              </div>
+
+              <div class="text-secondary small">
+                {{ s.specialty }}
+                {% if s.department %} · {{ s.department.name }}{% endif %}
+              </div>
+            </td>
+
+            <td>{{ s.year }}</td>
+
+            <td>
+              {% if s.status == "accepted" %}
+                <span class="badge text-bg-success">Принято</span>
+              {% elif s.status == "needs_fix" %}
+                <span class="badge text-bg-warning">Требует исправлений</span>
+              {% elif s.status == "submitted" %}
+                <span class="badge text-bg-primary">Отправлено</span>
+              {% else %}
+                <span class="badge text-bg-secondary">{{ s.get_status_display }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="badge text-bg-light border">{{ s.file_extension|default:".pdf" }}</span>
+              <div class="text-secondary small">
+                {% if s.file and s.file.name %}
+                  {{ s.file.name|slice:"-24:" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="text-end">
+              {% if s.file_size %}
+                {{ s.file_size|filesizeformat }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td class="text-end text-secondary small">
+              {{ s.created_at|date:"d.m.Y H:i" }}
+            </td>
+
+            <td class="text-end">
+              <a class="btn btn-outline-secondary btn-sm" href="/submissions/{{ s.id }}/">
+                Открыть
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <div class="text-center py-4">
+      <div class="text-secondary mb-2">Заявок пока нет.</div>
+      <a class="btn btn-success" href="/submissions/new/">Подать первую ВКР</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

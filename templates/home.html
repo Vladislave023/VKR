@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card p-4">
+      <h3 class="mb-2">Подсистема валидации входных данных</h3>
+      <p class="text-secondary mb-4">
+        Прототип для поддержки сотрудников Отдела электронной библиотеки НБ ДВФУ.
+        Проверяет корректность метаданных и загружаемый файл (только PDF).
+      </p>
+
+      {% if request.user.is_authenticated %}
+        <div class="d-flex gap-2">
+          <a class="btn btn-success" href="/submissions/new/">Подать ВКР</a>
+          <a class="btn btn-outline-success" href="/submissions/">Мои заявки</a>
+        </div>
+      {% else %}
+        <a class="btn btn-success" href="/login/">Войти</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
