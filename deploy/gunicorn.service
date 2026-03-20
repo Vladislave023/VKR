@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn for elib_vkr_validation
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/elib_vkr_validation
+EnvironmentFile=/var/www/elib_vkr_validation/.env
+ExecStart=/var/www/elib_vkr_validation/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
