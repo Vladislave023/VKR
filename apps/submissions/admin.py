@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Submission
 
 
@@ -8,6 +9,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         "id",
         "user",
         "document_type",
+        "display_file_name",
         "year",
         "status",
         "file_extension",

@@ -4,25 +4,25 @@ const FIO_RE = /^(?:[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s){2}[А-ЯЁ][
 const INITIALS_RE = /\b[А-ЯЁ]\.\s*[А-ЯЁ]\.?\b/u;
 const QUOTES_RE = /["'«»„“”]/u;
 
-function normalizeSpaces(v) {
-  return (v || "").replace(/\s+/g, " ").trim();
+function normalizeSpaces(value) {
+  return (value || "").replace(/\s+/g, " ").trim();
 }
 
-function countLetters(v) {
-  const m = v.match(/[A-Za-zА-ЯЁа-яё]/gu);
-  return m ? m.length : 0;
+function countLetters(value) {
+  const matches = value.match(/[A-Za-zА-ЯЁа-яё]/gu);
+  return matches ? matches.length : 0;
 }
 
-function upperLetterRatio(v) {
-  const letters = v.match(/[A-Za-zА-ЯЁа-яё]/gu) || [];
+function upperLetterRatio(value) {
+  const letters = value.match(/[A-Za-zА-ЯЁа-яё]/gu) || [];
   if (!letters.length) return 0;
-  const upper = (v.match(/[A-ZА-ЯЁ]/gu) || []).length;
+  const upper = (value.match(/[A-ZА-ЯЁ]/gu) || []).length;
   return upper / letters.length;
 }
 
 function getCsrfToken(form) {
-  const el = form.querySelector('input[name="csrfmiddlewaretoken"]');
-  return el ? el.value : null;
+  const element = form.querySelector('input[name="csrfmiddlewaretoken"]');
+  return element ? element.value : null;
 }
 
 function ensureErrorBox(field) {
@@ -59,7 +59,7 @@ function setFieldError(field, message) {
   field.classList.remove("is-valid");
   field.setAttribute("aria-invalid", "true");
   field.setCustomValidity(message || "Ошибка");
-  box.textContent = message || "Поле заполнено неверно.";
+  box.textContent = message || "Поле заполнено некорректно.";
 }
 
 function clearFieldError(field) {
@@ -75,10 +75,10 @@ function validateFio(field, label) {
   const value = normalizeSpaces(field.value);
 
   if (!value) return `Укажите ${label}.`;
-  if (value.length > 120) return `${label} слишком длинное.`;
-  if (INITIALS_RE.test(value)) return `${label}: нужны полные ФИО, инициалы запрещены.`;
+  if (value.length > 120) return `${label} указано слишком длинно.`;
+  if (INITIALS_RE.test(value)) return `${label}: укажите полное ФИО без инициалов.`;
   if (!/^[А-ЯЁа-яё\s-]+$/u.test(value)) return `${label}: допустимы только русские буквы, пробелы и дефис.`;
-  if (!FIO_RE.test(value)) return `${label}: формат «Фамилия Имя Отчество».`;
+  if (!FIO_RE.test(value)) return `${label}: используйте формат «Фамилия Имя Отчество».`;
 
   return null;
 }
@@ -87,14 +87,14 @@ function validateTitle(field) {
   const value = normalizeSpaces(field.value);
 
   if (!value) return "Укажите название работы.";
-  if (value.length < 5) return "Название слишком короткое.";
-  if (value.length > 300) return "Название слишком длинное.";
-  if (QUOTES_RE.test(value)) return "В названии нельзя использовать кавычки.";
+  if (value.length < 5) return "Название работы указано слишком кратко.";
+  if (value.length > 500) return "Название работы указано слишком длинно.";
+  if (QUOTES_RE.test(value)) return "В названии работы не следует использовать кавычки.";
 
   const letters = countLetters(value);
   const ratio = upperLetterRatio(value);
-  if (letters >= 10 && ratio > 0.85) {
-    return "Не используйте КАПС в названии.";
+  if (letters > 0 && ratio >= 0.7) {
+    return "Не используйте написание названия полностью заглавными буквами (CAPS).";
   }
 
   return null;
@@ -104,11 +104,13 @@ function validateYear(field) {
   const raw = normalizeSpaces(field.value);
   if (!raw) return "Укажите год.";
 
-  const y = Number(raw);
-  const now = new Date().getFullYear();
+  const year = Number(raw);
+  const currentYear = new Date().getFullYear();
 
-  if (!Number.isInteger(y)) return "Год должен быть целым числом.";
-  if (y < 1950 || y > now + 1) return `Год должен быть в диапазоне 1950–${now + 1}.`;
+  if (!Number.isInteger(year)) return "Год должен быть целым числом.";
+  if (year < 1900 || year > currentYear) {
+    return `Год должен быть в диапазоне 1900–${currentYear}.`;
+  }
 
   return null;
 }
@@ -117,28 +119,28 @@ function validatePageCount(field) {
   const raw = normalizeSpaces(field.value);
   if (!raw) return "Укажите количество страниц.";
 
-  const n = Number(raw);
-  if (!Number.isInteger(n)) return "Количество страниц должно быть целым числом.";
-  if (n < 1 || n > 2000) return "Количество страниц должно быть в диапазоне 1–2000.";
+  const count = Number(raw);
+  if (!Number.isInteger(count)) return "Количество страниц должно быть целым числом.";
+  if (count < 1 || count > 5000) return "Количество страниц должно быть в диапазоне 1–5000.";
 
   return null;
 }
 
 function validateRequiredSelect(field, label) {
-  if (!field.value) return `Выберите: ${label}.`;
+  if (!field.value) return `Выберите ${label}.`;
   return null;
 }
 
 function validateFile(field) {
-  const f = field.files && field.files[0];
-  if (!f) return "Прикрепите PDF-файл.";
+  const file = field.files && field.files[0];
+  if (!file) return "Прикрепите PDF-файл.";
 
-  const name = (f.name || "").toLowerCase();
+  const name = (file.name || "").toLowerCase();
   const byExt = name.endsWith(".pdf");
-  const byMime = (f.type || "").toLowerCase() === "application/pdf";
+  const byMime = (file.type || "").toLowerCase() === "application/pdf";
 
   if (!byExt && !byMime) return "Файл должен быть в формате PDF.";
-  if (f.size > MAX_FILE_BYTES) return "Файл слишком большой. Максимум 100 МБ.";
+  if (file.size > MAX_FILE_BYTES) return "Размер файла превышает допустимые 100 МБ.";
 
   return null;
 }
@@ -169,20 +171,22 @@ function hideSummary(form) {
 }
 
 async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { "Accept": "application/json" },
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
     credentials: "same-origin",
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
 }
 
 function resetSelect(select) {
   select.innerHTML = "";
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = "---------";
-  select.appendChild(opt);
+  const option = document.createElement("option");
+  option.value = "";
+  option.textContent = "---------";
+  select.appendChild(option);
 }
 
 async function loadDepartments(instituteSelect, departmentSelect) {
@@ -191,10 +195,10 @@ async function loadDepartments(instituteSelect, departmentSelect) {
 
   const data = await fetchJson(`/references/api/departments/?institute_id=${encodeURIComponent(instituteSelect.value)}`);
   for (const item of data.results || []) {
-    const opt = document.createElement("option");
-    opt.value = String(item.id);
-    opt.textContent = item.name;
-    departmentSelect.appendChild(opt);
+    const option = document.createElement("option");
+    option.value = String(item.id);
+    option.textContent = item.name;
+    departmentSelect.appendChild(option);
   }
 }
 
@@ -206,19 +210,19 @@ async function loadSpecialties(levelSelect, instituteSelect, specialtySelect) {
   const data = await fetchJson(url);
 
   for (const item of data.results || []) {
-    const opt = document.createElement("option");
-    opt.value = String(item.id);
-    opt.textContent = item.label;
-    specialtySelect.appendChild(opt);
+    const option = document.createElement("option");
+    option.value = String(item.id);
+    option.textContent = item.label;
+    specialtySelect.appendChild(option);
   }
 }
 
 function updateFilePreview(fileInput) {
-  const nameEl = document.getElementById("selectedFileName");
-  if (!nameEl) return;
+  const nameElement = document.getElementById("selectedFileName");
+  if (!nameElement) return;
 
-  const f = fileInput.files && fileInput.files[0];
-  nameEl.textContent = f ? `${f.name} (${Math.ceil(f.size / 1024)} КБ)` : "—";
+  const file = fileInput.files && fileInput.files[0];
+  nameElement.textContent = file ? `${file.name} (${Math.ceil(file.size / 1024)} КБ)` : "—";
 }
 
 function initSubmissionForm() {
@@ -232,6 +236,7 @@ function initSubmissionForm() {
   const title = document.getElementById("id_work_title");
   const year = document.getElementById("id_year");
   const pages = document.getElementById("id_page_count");
+  const documentType = document.getElementById("id_document_type");
   const level = document.getElementById("id_education_level");
   const institute = document.getElementById("id_institute");
   const specialty = document.getElementById("id_specialty");
@@ -240,7 +245,7 @@ function initSubmissionForm() {
   const clearFileBtn = document.getElementById("clearFileBtn");
   const submitBtn = form.querySelector('button[type="submit"]');
 
-  if (!author || !supervisor || !title || !year || !pages || !level || !institute || !specialty || !department || !file) {
+  if (!author || !supervisor || !title || !year || !pages || !documentType || !level || !institute || !specialty || !department || !file) {
     return;
   }
 
@@ -254,9 +259,10 @@ function initSubmissionForm() {
     [title, () => validateTitle(title)],
     [year, () => validateYear(year)],
     [pages, () => validatePageCount(pages)],
+    [documentType, () => validateRequiredSelect(documentType, "тип документа")],
     [level, () => validateRequiredSelect(level, "уровень образования")],
     [institute, () => validateRequiredSelect(institute, "институт/школу")],
-    [specialty, () => validateRequiredSelect(specialty, "направление/специальность")],
+    [specialty, () => validateRequiredSelect(specialty, "направление подготовки")],
     [department, () => validateRequiredSelect(department, "кафедру/департамент")],
     [file, () => validateFile(file)],
   ]);
@@ -271,6 +277,7 @@ function initSubmissionForm() {
       setFieldError(field, message);
       return false;
     }
+
     clearFieldError(field);
     return true;
   }
@@ -281,19 +288,23 @@ function initSubmissionForm() {
     for (const field of validators.keys()) {
       ok = validateField(field, force) && ok;
     }
-    if (submitBtn) submitBtn.disabled = !form.checkValidity();
+    if (submitBtn) {
+      submitBtn.disabled = !form.checkValidity();
+    }
     return ok;
   }
 
   function focusFirstInvalid() {
     const first = form.querySelector(".is-invalid");
-    if (first) first.focus();
+    if (first) {
+      first.focus();
+    }
   }
 
   for (const field of validators.keys()) {
-    const evt = (field.tagName === "SELECT" || field.type === "file") ? "change" : "input";
+    const eventName = field.tagName === "SELECT" || field.type === "file" ? "change" : "input";
 
-    field.addEventListener(evt, () => {
+    field.addEventListener(eventName, () => {
       touch(field);
       validateField(field, true);
       validateAll(false);
@@ -313,7 +324,7 @@ function initSubmissionForm() {
         await loadSpecialties(level, institute, specialty);
       }
     } catch {
-      setFieldError(specialty, "Не удалось загрузить направления.");
+      setFieldError(specialty, "Не удалось загрузить список направлений подготовки.");
     }
   });
 
@@ -326,7 +337,7 @@ function initSubmissionForm() {
         await loadDepartments(institute, department);
       }
     } catch {
-      setFieldError(department, "Не удалось загрузить кафедры.");
+      setFieldError(department, "Не удалось загрузить список кафедр.");
     }
 
     try {
@@ -334,7 +345,7 @@ function initSubmissionForm() {
         await loadSpecialties(level, institute, specialty);
       }
     } catch {
-      setFieldError(specialty, "Не удалось загрузить направления.");
+      setFieldError(specialty, "Не удалось загрузить список направлений подготовки.");
     }
   });
 
@@ -355,52 +366,53 @@ function initSubmissionForm() {
   validateAll(false);
 
   async function submitAjax() {
-    const fd = new FormData(form);
-    const csrf = getCsrfToken(form);
+    const formData = new FormData(form);
+    const csrfToken = getCsrfToken(form);
 
-    const res = await fetch(form.action || window.location.pathname, {
+    const response = await fetch(form.action || window.location.pathname, {
       method: "POST",
-      body: fd,
+      body: formData,
       credentials: "same-origin",
       headers: {
-        "Accept": "application/json",
-        ...(csrf ? { "X-CSRFToken": csrf } : {}),
+        Accept: "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
       },
     });
 
-    const data = await res.json();
+    const data = await response.json();
 
-    if (res.ok && data.ok) {
+    if (response.ok && data.ok) {
       window.location.href = data.redirect_url || "/submissions/";
       return;
     }
 
-    showSummary(form, "Форма содержит ошибки. Проверьте подсвеченные поля.");
+    showSummary(form, "Форма содержит ошибки. Проверьте поля с подсветкой.");
 
-    for (const [fieldName, errList] of Object.entries(data.errors || {})) {
+    for (const [fieldName, errorList] of Object.entries(data.errors || {})) {
       const input = document.getElementById(`id_${fieldName}`);
       if (!input) continue;
+
       touch(input);
-      const msg = errList?.[0]?.message || "Ошибка в поле.";
-      setFieldError(input, msg);
+      const message = errorList?.[0]?.message || "Поле заполнено некорректно.";
+      setFieldError(input, message);
     }
 
     validateAll(false);
     focusFirstInvalid();
   }
 
-  form.addEventListener("submit", async (e) => {
-    const ok = validateAll(true);
+  form.addEventListener("submit", async (event) => {
+    const isValid = validateAll(true);
 
-    if (!ok || !form.checkValidity()) {
-      e.preventDefault();
+    if (!isValid || !form.checkValidity()) {
+      event.preventDefault();
       showSummary(form, "Исправьте ошибки перед отправкой формы.");
       focusFirstInvalid();
       return;
     }
 
     if (form.dataset.ajaxSubmit === "1") {
-      e.preventDefault();
+      event.preventDefault();
       await submitAjax();
     }
   });

@@ -8,13 +8,13 @@
     <div class="card p-4">
       <h3 class="mb-1">Подача ВКР</h3>
       <p class="text-secondary mb-3">
-        Заполните метаданные и прикрепите один PDF-файл (≤ 100 МБ).
+        Заполните метаданные и прикрепите один PDF-файл (не более 100 МБ).
       </p>
 
       {% if form.errors %}
         <div class="alert alert-warning">
-          Форма содержит ошибки. Обратите внимание: браузер не сохраняет выбранный файл после отправки формы —
-          если вы получили ошибки, файл нужно выбрать заново.
+          Форма содержит ошибки. Обратите внимание: браузер не сохраняет выбранный файл после отправки формы.
+          Если появились ошибки, файл потребуется выбрать повторно.
         </div>
       {% endif %}
 
@@ -31,21 +31,21 @@
           <div class="col-12">
             <label class="form-label">{{ form.author_full_name.label }}</label>
             {{ form.author_full_name }}
-            <div class="form-text">Только русские буквы. Формат: Фамилия Имя Отчество.</div>
+            <div class="form-text">Укажите полное ФИО автора на русском языке в формате «Фамилия Имя Отчество».</div>
             {% for e in form.author_full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="col-12">
             <label class="form-label">{{ form.supervisor_full_name.label }}</label>
             {{ form.supervisor_full_name }}
-            <div class="form-text">Только полное ФИО (инициалы запрещены).</div>
+            <div class="form-text">Укажите полное ФИО научного руководителя без сокращений и инициалов.</div>
             {% for e in form.supervisor_full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="col-12">
             <label class="form-label">{{ form.work_title.label }}</label>
             {{ form.work_title }}
-            <div class="form-text">Без кавычек и без капса.</div>
+            <div class="form-text">Укажите официальное название работы без кавычек и без написания полностью заглавными буквами (CAPS).</div>
             {% for e in form.work_title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
@@ -70,7 +70,7 @@
 
         <div class="soft-divider"></div>
 
-        <div class="section-title">Учебная привязка (важно заполнить по порядку)</div>
+        <div class="section-title">Учебная привязка (важно заполнять по порядку)</div>
 
         <div class="row g-3">
           <div class="col-12">
@@ -82,21 +82,21 @@
           <div class="col-12">
             <label class="form-label">2) {{ form.institute.label }}</label>
             {{ form.institute }}
-            <div class="form-text">После выбора школы будут доступны кафедры и направления.</div>
+            <div class="form-text">После выбора института или школы станут доступны кафедры и направления подготовки.</div>
             {% for e in form.institute.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="col-12">
             <label class="form-label">3) {{ form.specialty.label }}</label>
             {{ form.specialty }}
-            <div class="form-text">Список формируется по выбранным: уровень + школа.</div>
+            <div class="form-text">Список формируется в соответствии с выбранными уровнем образования и институтом/школой.</div>
             {% for e in form.specialty.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
           <div class="col-12">
             <label class="form-label">4) {{ form.department.label }}</label>
             {{ form.department }}
-            <div class="form-text">Список кафедр зависит от выбранной школы.</div>
+            <div class="form-text">Список кафедр зависит от выбранного института или школы.</div>
             {% for e in form.department.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
         </div>
@@ -109,7 +109,7 @@
           <div class="col-12">
             <label class="form-label">{{ form.file.label }}</label>
             {{ form.file }}
-            <div class="form-text">Только один PDF-файл (≤ 100 МБ).</div>
+            <div class="form-text">Допускается загрузка одного PDF-файла объёмом не более 100 МБ.</div>
             {% for e in form.file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
 
             <div class="mt-2 d-flex flex-wrap align-items-center gap-2">

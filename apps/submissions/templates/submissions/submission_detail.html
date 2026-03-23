@@ -30,7 +30,7 @@
   {% if s.staff_comment %}
     <div class="mb-4">
       <div class="border rounded-4 p-3 bg-warning-subtle">
-        <div class="text-secondary small mb-1">Ответ проверяющего</div>
+        <div class="text-secondary small mb-1">Комментарий проверяющего</div>
         <div class="fw-semibold">{{ s.staff_comment|linebreaksbr }}</div>
       </div>
     </div>
@@ -70,7 +70,7 @@
 
       <div class="col-md-4">
         <div class="border rounded-4 p-3 h-100 bg-light">
-          <div class="text-secondary small mb-1">Кол-во страниц</div>
+          <div class="text-secondary small mb-1">Количество страниц</div>
           <div class="fw-semibold fs-5">{{ s.page_count }}</div>
         </div>
       </div>
@@ -114,9 +114,7 @@
       <div class="col-md-6">
         <div class="border rounded-4 p-3 h-100 bg-light">
           <div class="text-secondary small mb-1">Кафедра/департамент</div>
-          <div class="fw-semibold fs-5">
-            {% if s.department %}{{ s.department.name }}{% else %}—{% endif %}
-          </div>
+          <div class="fw-semibold fs-5">{% if s.department %}{{ s.department.name }}{% else %}—{% endif %}</div>
         </div>
       </div>
     </div>
@@ -140,7 +138,7 @@
         <div class="col-md-4 text-md-end">
           {% if s.file %}
             <a class="btn btn-outline-success" href="{{ s.file.url }}" target="_blank" rel="noopener">
-              Скачать PDF
+              Открыть PDF
             </a>
           {% endif %}
         </div>
