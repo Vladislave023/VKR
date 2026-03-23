@@ -7,7 +7,7 @@ def fill_original_file_names(apps, schema_editor):
     Submission = apps.get_model("submissions", "Submission")
 
     for submission in Submission.objects.exclude(file="").filter(original_file_name=""):
-        submission.original_file_name = os.path.basename(submission.file)
+        submission.original_file_name = os.path.basename(submission.file.name)
         submission.save(update_fields=["original_file_name"])
 
 
