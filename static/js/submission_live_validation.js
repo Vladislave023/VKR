@@ -7,15 +7,18 @@ function normalizeSpaces(value) {
   return (value || "").replace(/\s+/g, " ").trim();
 }
 
+function extractLetters(value) {
+  return Array.from(value).filter((char) => /\p{L}/u.test(char));
+}
+
 function countLetters(value) {
-  const matches = value.match(/[A-Za-zА-ЯЁа-яё]/gu);
-  return matches ? matches.length : 0;
+  return extractLetters(value).length;
 }
 
 function upperLetterRatio(value) {
-  const letters = value.match(/[A-Za-zА-ЯЁа-яё]/gu) || [];
+  const letters = extractLetters(value);
   if (!letters.length) return 0;
-  const upper = (value.match(/[A-ZА-ЯЁ]/gu) || []).length;
+  const upper = letters.filter((char) => char === char.toUpperCase() && char !== char.toLowerCase()).length;
   return upper / letters.length;
 }
 
@@ -316,6 +319,7 @@ function initSubmissionForm() {
   function focusFirstInvalid() {
     const first = form.querySelector(".is-invalid");
     if (first) {
+      first.scrollIntoView({ behavior: "smooth", block: "center" });
       first.focus();
     }
   }
