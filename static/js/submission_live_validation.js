@@ -2,7 +2,6 @@ const MAX_FILE_BYTES = 100 * 1024 * 1024;
 
 const FIO_RE = /^(?:[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s){2}[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?$/u;
 const INITIALS_RE = /\b[А-ЯЁ]\.\s*[А-ЯЁ]\.?\b/u;
-const QUOTES_RE = /["'«»„“”]/u;
 
 function normalizeSpaces(value) {
   return (value || "").replace(/\s+/g, " ").trim();
@@ -18,6 +17,24 @@ function upperLetterRatio(value) {
   if (!letters.length) return 0;
   const upper = (value.match(/[A-ZА-ЯЁ]/gu) || []).length;
   return upper / letters.length;
+}
+
+function hasBalancedQuotes(value) {
+  if (((value.match(/"/g) || []).length % 2) !== 0) {
+    return false;
+  }
+
+  let opened = 0;
+  for (const char of value) {
+    if (char === "«") {
+      opened += 1;
+    } else if (char === "»") {
+      if (opened === 0) return false;
+      opened -= 1;
+    }
+  }
+
+  return opened === 0;
 }
 
 function getCsrfToken(form) {
@@ -89,11 +106,13 @@ function validateTitle(field) {
   if (!value) return "Укажите название работы.";
   if (value.length < 5) return "Название работы указано слишком кратко.";
   if (value.length > 500) return "Название работы указано слишком длинно.";
-  if (QUOTES_RE.test(value)) return "В названии работы не следует использовать кавычки.";
+  if (countLetters(value) < 3) return "Название работы должно содержать осмысленный текст.";
+  if (/[.,;:!?]{3,}/u.test(value)) return "Не используйте более двух знаков препинания подряд в названии работы.";
+  if (!hasBalancedQuotes(value)) return "Если в названии используются кавычки, они должны быть парными.";
 
   const letters = countLetters(value);
   const ratio = upperLetterRatio(value);
-  if (letters > 0 && ratio >= 0.7) {
+  if (letters > 0 && ratio === 1) {
     return "Не используйте написание названия полностью заглавными буквами (CAPS).";
   }
 

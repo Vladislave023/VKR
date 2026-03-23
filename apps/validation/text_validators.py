@@ -5,37 +5,62 @@ from django.core.exceptions import ValidationError
 
 from .normalization import normalize_whitespace
 
-QUOTE_CHARS = {'"', "«", "»", "“", "”", "„", "‟", "'"}
-
-# Разрешаем кириллицу/латиницу + дефис (Фамилия-Имя)
 NAME_PART_RE = re.compile(r"^[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*$")
+TITLE_PUNCTUATION_RUN_RE = re.compile(r"[.,;:!?]{3,}")
 
 
-def _letters_stats(s: str) -> tuple[int, int]:
-    letters = [c for c in s if c.isalpha()]
-    if not letters:
-        return (0, 0)
-    upper = sum(1 for c in letters if c.isupper())
-    return (len(letters), upper)
+def _letters(value: str) -> list[str]:
+    return [char for char in value if char.isalpha()]
 
 
 def validate_not_mostly_caps(value: str, *, field_label: str = "Поле") -> None:
     value = normalize_whitespace(value)
-    total, upper = _letters_stats(value)
-    if total == 0:
+    letters = _letters(value)
+    if not letters:
         return
 
-    # Если почти все буквы верхнего регистра — считаем это написанием CAPS.
-    if upper / total >= 0.7:
+    if all(char.isupper() for char in letters):
         raise ValidationError(
             f"{field_label}: не используйте написание полностью заглавными буквами (CAPS)."
         )
 
 
-def validate_title_no_quotes(value: str) -> None:
+def _validate_balanced_quotes(value: str) -> None:
+    if value.count('"') % 2 != 0:
+        raise ValidationError("Если в названии используются кавычки, они должны быть парными.")
+
+    opened = 0
+    for char in value:
+        if char == "«":
+            opened += 1
+        elif char == "»":
+            if opened == 0:
+                raise ValidationError("Кавычки в названии работы должны быть оформлены корректно.")
+            opened -= 1
+
+    if opened != 0:
+        raise ValidationError("Кавычки в названии работы должны быть оформлены корректно.")
+
+
+def validate_work_title(value: str) -> str:
     value = normalize_whitespace(value)
-    if any(ch in value for ch in QUOTE_CHARS):
-        raise ValidationError("Название работы должно быть указано без кавычек.")
+
+    if len(value) < 5:
+        raise ValidationError("Название работы указано слишком кратко.")
+
+    if len(value) > 500:
+        raise ValidationError("Название работы указано слишком длинно.")
+
+    letters = _letters(value)
+    if len(letters) < 3:
+        raise ValidationError("Название работы должно содержать осмысленный текст.")
+
+    if TITLE_PUNCTUATION_RUN_RE.search(value):
+        raise ValidationError("Не используйте более двух знаков препинания подряд в названии работы.")
+
+    _validate_balanced_quotes(value)
+    validate_not_mostly_caps(value, field_label="Название работы")
+    return value
 
 
 def validate_year(value: int) -> None:
@@ -56,20 +81,19 @@ def _validate_full_name(value: str, *, allow_initials: bool) -> str:
     if len(parts) < 3:
         raise ValidationError("ФИО должно содержать минимум 3 части: Фамилия Имя Отчество.")
 
-    for p in parts:
-        if allow_initials and re.fullmatch(r"[A-Za-zА-ЯЁ]\.", p):
+    for part in parts:
+        if allow_initials and re.fullmatch(r"[A-Za-zА-ЯЁ]\.", part):
             continue
 
-        if not NAME_PART_RE.fullmatch(p):
+        if not NAME_PART_RE.fullmatch(part):
             raise ValidationError("ФИО должно содержать только русские буквы и дефис.")
 
-        if len(p.replace("-", "")) == 1:
+        if len(part.replace("-", "")) == 1:
             raise ValidationError("ФИО не должно состоять из одиночных символов.")
 
-        for chunk in p.split("-"):
-            if len(chunk) >= 2:
-                if not (chunk[0].isupper() and chunk[1:].islower()):
-                    raise ValidationError("ФИО должно быть записано с заглавной буквы, без CAPS.")
+        for chunk in part.split("-"):
+            if len(chunk) >= 2 and not (chunk[0].isupper() and chunk[1:].islower()):
+                raise ValidationError("ФИО должно быть записано с заглавной буквы, без CAPS.")
 
     validate_not_mostly_caps(value, field_label="ФИО")
     return value

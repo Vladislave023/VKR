@@ -6,10 +6,9 @@ from apps.validation.file_validators import validate_pdf_upload
 from apps.validation.normalization import normalize_whitespace
 from apps.validation.text_validators import (
     validate_author_full_name,
-    validate_not_mostly_caps,
     validate_page_count,
     validate_supervisor_full_name,
-    validate_title_no_quotes,
+    validate_work_title,
     validate_year,
 )
 
@@ -100,9 +99,7 @@ class SubmissionCreateForm(forms.ModelForm):
 
     def clean_work_title(self):
         value = normalize_whitespace(self.cleaned_data.get("work_title", ""))
-        validate_title_no_quotes(value)
-        validate_not_mostly_caps(value, field_label="Название работы")
-        return value
+        return validate_work_title(value)
 
     def clean_year(self):
         value = self.cleaned_data.get("year")

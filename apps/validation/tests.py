@@ -1,13 +1,24 @@
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
-from .text_validators import validate_not_mostly_caps
+from .text_validators import validate_work_title
 
 
 class TitleValidationTests(SimpleTestCase):
-    def test_short_caps_text_is_rejected(self):
+    def test_all_caps_title_is_rejected(self):
         with self.assertRaises(ValidationError):
-            validate_not_mostly_caps("УУУУУУУУУ", field_label="Название работы")
+            validate_work_title("УУУУУУУУУ")
 
-    def test_normal_title_passes_validation(self):
-        validate_not_mostly_caps("Исследование методов машинного обучения", field_label="Название работы")
+    def test_title_with_paired_quotes_is_allowed(self):
+        self.assertEqual(
+            validate_work_title('Исследование метода "слоистого анализа" в инженерных данных'),
+            'Исследование метода "слоистого анализа" в инженерных данных',
+        )
+
+    def test_title_with_unpaired_quotes_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_work_title('Исследование метода "слоистого анализа в инженерных данных')
+
+    def test_title_with_excessive_punctuation_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_work_title("Анализ методов;;; обработки сигналов")

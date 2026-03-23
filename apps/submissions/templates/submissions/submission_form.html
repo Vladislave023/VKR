@@ -45,7 +45,7 @@
           <div class="col-12">
             <label class="form-label">{{ form.work_title.label }}</label>
             {{ form.work_title }}
-            <div class="form-text">Укажите официальное название работы без кавычек и без написания полностью заглавными буквами (CAPS).</div>
+            <div class="form-text">Укажите официальное название работы. Кавычки допустимы, если они оформлены парно; не используйте название полностью заглавными буквами и избегайте избыточных знаков препинания.</div>
             {% for e in form.work_title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
