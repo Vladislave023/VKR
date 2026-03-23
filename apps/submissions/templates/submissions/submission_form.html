@@ -45,7 +45,7 @@
           <div class="col-12">
             <label class="form-label">{{ form.work_title.label }}</label>
             {{ form.work_title }}
-            <div class="form-text">Укажите официальное название работы. Кавычки допустимы, если они оформлены парно; не используйте название полностью заглавными буквами и избегайте избыточных знаков препинания.</div>
+            <div class="form-text">Укажите официальное название работы. Кавычки допустимы, если они оформлены парно; не используйте написание полностью прописными буквами и избегайте избыточных знаков препинания.</div>
             {% for e in form.work_title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
 
@@ -130,5 +130,5 @@
     </div>
   </div>
 </div>
-<script src="{% static 'js/submission_live_validation.js' %}?v=20260323b"></script>
+<script src="{% static 'js/submission_live_validation.js' %}?v=20260323c"></script>
 {% endblock %}

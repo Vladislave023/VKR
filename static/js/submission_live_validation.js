@@ -110,13 +110,16 @@ function validateTitle(field) {
   if (value.length < 5) return "Название работы указано слишком кратко.";
   if (value.length > 500) return "Название работы указано слишком длинно.";
   if (countLetters(value) < 3) return "Название работы должно содержать осмысленный текст.";
+  if (countLetters(value) >= 5 && new Set(Array.from(value.toLowerCase()).filter((char) => /\p{L}/u.test(char))).size === 1) {
+    return "Название работы должно содержать осмысленный текст, а не повторение одной буквы.";
+  }
   if (/[.,;:!?]{3,}/u.test(value)) return "Не используйте более двух знаков препинания подряд в названии работы.";
   if (!hasBalancedQuotes(value)) return "Если в названии используются кавычки, они должны быть парными.";
 
   const letters = countLetters(value);
   const ratio = upperLetterRatio(value);
   if (letters > 0 && ratio === 1) {
-    return "Не используйте написание названия полностью заглавными буквами (CAPS).";
+    return "Не используйте написание названия полностью прописными буквами.";
   }
 
   return null;

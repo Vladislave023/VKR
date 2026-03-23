@@ -9,6 +9,10 @@ class TitleValidationTests(SimpleTestCase):
         with self.assertRaises(ValidationError):
             validate_work_title("УУУУУУУУУ")
 
+    def test_repeated_single_letter_title_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            validate_work_title("ФФФФФФФФ")
+
     def test_title_with_paired_quotes_is_allowed(self):
         self.assertEqual(
             validate_work_title('Исследование метода "слоистого анализа" в инженерных данных'),

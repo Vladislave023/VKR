@@ -21,7 +21,7 @@ def validate_not_mostly_caps(value: str, *, field_label: str = "Поле") -> No
 
     if all(char.isupper() for char in letters):
         raise ValidationError(
-            f"{field_label}: не используйте написание полностью заглавными буквами (CAPS)."
+            f"{field_label}: не используйте написание полностью прописными буквами."
         )
 
 
@@ -54,6 +54,10 @@ def validate_work_title(value: str) -> str:
     letters = _letters(value)
     if len(letters) < 3:
         raise ValidationError("Название работы должно содержать осмысленный текст.")
+
+    unique_letters = {char.lower() for char in letters}
+    if len(letters) >= 5 and len(unique_letters) == 1:
+        raise ValidationError("Название работы должно содержать осмысленный текст, а не повторение одной буквы.")
 
     if TITLE_PUNCTUATION_RUN_RE.search(value):
         raise ValidationError("Не используйте более двух знаков препинания подряд в названии работы.")
