@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from .forms import SubmissionCreateForm
+from .forms import SubmissionCreateForm, SubmissionUpdateForm
 from .models import Submission, SubmissionStatus
 
 
@@ -40,7 +40,60 @@ def submission_create_view(request):
     else:
         form = SubmissionCreateForm()
 
-    return render(request, "submissions/submission_form.html", {"form": form})
+    return render(request, "submissions/submission_form.html", {
+        "form": form,
+        "page_title": "Подача ВКР",
+        "submit_label": "Отправить",
+        "file_required": True,
+    })
+
+
+@login_required
+def submission_edit_view(request, pk: int):
+    submission = get_object_or_404(
+        Submission,
+        pk=pk,
+        user=request.user,
+        status=SubmissionStatus.NEEDS_FIX,
+    )
+
+    if request.method == "POST":
+        form = SubmissionUpdateForm(request.POST, request.FILES, instance=submission)
+        if form.is_valid():
+            sub = form.save(commit=False)
+            sub.status = SubmissionStatus.SUBMITTED
+            sub.staff_comment = ""
+
+            uploaded_file = request.FILES.get("file")
+            if uploaded_file:
+                sub.original_file_name = uploaded_file.name
+
+            sub.save()
+
+            if wants_json(request):
+                return JsonResponse({
+                    "ok": True,
+                    "redirect_url": reverse("submissions:detail", args=[sub.pk]),
+                })
+
+            messages.success(request, "Исправленная заявка отправлена повторно.")
+            return redirect("submissions:detail", pk=sub.pk)
+
+        if wants_json(request):
+            return JsonResponse({
+                "ok": False,
+                "errors": form.errors.get_json_data(escape_html=True),
+            }, status=400)
+    else:
+        form = SubmissionUpdateForm(instance=submission)
+
+    return render(request, "submissions/submission_form.html", {
+        "form": form,
+        "submission": submission,
+        "page_title": f"Исправление заявки #{submission.pk}",
+        "submit_label": "Отправить повторно",
+        "file_required": False,
+    })
 
 
 @login_required

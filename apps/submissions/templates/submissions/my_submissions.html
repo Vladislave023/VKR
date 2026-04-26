@@ -82,6 +82,11 @@
               </td>
 
               <td class="text-end">
+                {% if s.status == "needs_fix" %}
+                  <a class="btn btn-warning btn-sm mb-1" href="/submissions/{{ s.id }}/edit/">
+                    Исправить
+                  </a>
+                {% endif %}
                 <a class="btn btn-outline-secondary btn-sm" href="/submissions/{{ s.id }}/">
                   Открыть
                 </a>

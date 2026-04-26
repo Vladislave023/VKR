@@ -139,3 +139,19 @@ class SubmissionCreateForm(forms.ModelForm):
                 )
 
         return cleaned
+
+
+class SubmissionUpdateForm(SubmissionCreateForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["file"].required = False
+
+    def clean_file(self):
+        if "file" not in self.files:
+            if self.instance and self.instance.file:
+                return self.instance.file
+            raise ValidationError("Файл не выбран.")
+
+        uploaded_file = self.cleaned_data.get("file")
+        validate_pdf_upload(uploaded_file)
+        return uploaded_file

@@ -10,6 +10,9 @@
 
   <div class="d-flex gap-2">
     <a class="btn btn-outline-secondary" href="/submissions/">Назад</a>
+    {% if s.status == "needs_fix" %}
+      <a class="btn btn-warning" href="/submissions/{{ s.id }}/edit/">Исправить заявку</a>
+    {% endif %}
     <a class="btn btn-success" href="/submissions/new/">Подать новую</a>
   </div>
 </div>

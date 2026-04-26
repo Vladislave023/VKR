@@ -156,9 +156,9 @@ function validateRequiredSelect(field, label) {
   return null;
 }
 
-function validateFile(field) {
+function validateFile(field, required = true) {
   const file = field.files && field.files[0];
-  if (!file) return "Прикрепите PDF-файл.";
+  if (!file) return required ? "Прикрепите PDF-файл." : null;
 
   const name = (file.name || "").toLowerCase();
   const byExt = name.endsWith(".pdf");
@@ -269,6 +269,7 @@ function initSubmissionForm() {
   const file = document.getElementById("id_file");
   const clearFileBtn = document.getElementById("clearFileBtn");
   const submitBtn = form.querySelector('button[type="submit"]');
+  const fileRequired = form.dataset.fileRequired !== "0";
 
   if (!author || !supervisor || !title || !year || !pages || !documentType || !level || !institute || !specialty || !department || !file) {
     return;
@@ -289,7 +290,7 @@ function initSubmissionForm() {
     [institute, () => validateRequiredSelect(institute, "институт/школу")],
     [specialty, () => validateRequiredSelect(specialty, "направление подготовки")],
     [department, () => validateRequiredSelect(department, "кафедру/департамент")],
-    [file, () => validateFile(file)],
+    [file, () => validateFile(file, fileRequired)],
   ]);
 
   function validateField(field, force = false) {

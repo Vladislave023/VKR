@@ -1,24 +1,32 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Подача ВКР{% endblock %}
+{% block title %}{{ page_title|default:"Подача ВКР" }}{% endblock %}
 {% block content %}
 
 <div class="row justify-content-center">
   <div class="col-lg-9">
     <div class="card p-4">
-      <h3 class="mb-1">Подача ВКР</h3>
+      <h3 class="mb-1">{{ page_title|default:"Подача ВКР" }}</h3>
       <p class="text-secondary mb-3">
         Заполните метаданные и прикрепите один PDF-файл (не более 100 МБ).
+        {% if submission %}Если файл не нужно менять, оставьте текущее значение без изменений.{% endif %}
       </p>
+
+      {% if submission and submission.staff_comment %}
+        <div class="alert alert-warning">
+          <div class="fw-semibold mb-1">Комментарий проверяющего</div>
+          <div>{{ submission.staff_comment|linebreaksbr }}</div>
+        </div>
+      {% endif %}
 
       {% if form.errors %}
         <div class="alert alert-warning">
           Форма содержит ошибки. Обратите внимание: браузер не сохраняет выбранный файл после отправки формы.
-          Если появились ошибки, файл потребуется выбрать повторно.
+          {% if file_required %}Если появились ошибки, файл потребуется выбрать повторно.{% else %}Если вы выбирали новый файл, его потребуется выбрать повторно.{% endif %}
         </div>
       {% endif %}
 
-      <form id="submissionForm" method="post" enctype="multipart/form-data" novalidate data-ajax-submit="1">
+      <form id="submissionForm" method="post" enctype="multipart/form-data" novalidate data-ajax-submit="1" data-file-required="{% if file_required %}1{% else %}0{% endif %}">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -109,7 +117,10 @@
           <div class="col-12">
             <label class="form-label">{{ form.file.label }}</label>
             {{ form.file }}
-            <div class="form-text">Допускается загрузка одного PDF-файла объёмом не более 100 МБ.</div>
+            <div class="form-text">
+              Допускается загрузка одного PDF-файла объёмом не более 100 МБ.
+              {% if submission and submission.file %}Текущий файл: {{ submission.display_file_name }}.{% endif %}
+            </div>
             {% for e in form.file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
 
             <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
@@ -123,7 +134,7 @@
         </div>
 
         <div class="mt-4 d-flex gap-2">
-          <button class="btn btn-success" type="submit">Отправить</button>
+          <button class="btn btn-success" type="submit">{{ submit_label|default:"Отправить" }}</button>
           <a class="btn btn-outline-secondary" href="/submissions/">Отмена</a>
         </div>
       </form>
