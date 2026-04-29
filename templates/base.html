@@ -146,5 +146,48 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Тост-контейнер (нижний правый угол) -->
+<div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+</div>
+
+<script>
+/**
+ * showToast(message, variant)
+ * variant: 'success' | 'danger' | 'warning' | 'info'
+ * Доступна глобально — используется из submission_live_validation.js
+ */
+function showToast(message, variant = "success") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  const icons = {
+    success: "✅",
+    danger:  "❌",
+    warning: "⚠️",
+    info:    "ℹ️",
+  };
+
+  const wrap = document.createElement("div");
+  wrap.className = `toast align-items-center text-bg-${variant} border-0 shadow`;
+  wrap.setAttribute("role", "alert");
+  wrap.setAttribute("aria-live", "assertive");
+  wrap.setAttribute("aria-atomic", "true");
+  wrap.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body fw-semibold">
+        ${icons[variant] ?? ""} ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast" aria-label="Закрыть"></button>
+    </div>`;
+
+  container.appendChild(wrap);
+
+  const t = new bootstrap.Toast(wrap, { delay: variant === "danger" ? 6000 : 3500 });
+  wrap.addEventListener("hidden.bs.toast", () => wrap.remove());
+  t.show();
+}
+</script>
 </body>
 </html>

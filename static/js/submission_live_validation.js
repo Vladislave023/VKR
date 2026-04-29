@@ -392,27 +392,69 @@ function initSubmissionForm() {
   updateFilePreview(file);
   validateAll(false);
 
+  // ── Защита от повторной отправки ──────────────────────────────────────────
+  let isSubmitting = false;
+
+  function lockForm(btn) {
+    isSubmitting = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.dataset.originalText = btn.textContent;
+      btn.textContent = "Отправка…";
+    }
+  }
+
+  function unlockForm(btn) {
+    isSubmitting = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.originalText || "Отправить";
+    }
+  }
+
   async function submitAjax() {
-    const formData = new FormData(form);
-    const csrfToken = getCsrfToken(form);
+    const submitBtn = form.querySelector('[type="submit"]');
+    lockForm(submitBtn);
 
-    const response = await fetch(form.action || window.location.pathname, {
-      method: "POST",
-      body: formData,
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-      },
-    });
+    let data = null;
+    try {
+      const formData = new FormData(form);
+      const csrfToken = getCsrfToken(form);
 
-    const data = await response.json();
+      const response = await fetch(form.action || window.location.pathname, {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+      });
 
-    if (response.ok && data.ok) {
-      window.location.href = data.redirect_url || "/submissions/";
+      data = await response.json();
+
+      if (response.ok && data.ok) {
+        // Успех — показываем тост и держим кнопку заблокированной до редиректа
+        if (typeof showToast === "function") {
+          showToast("Заявка успешно отправлена!", "success");
+        }
+        setTimeout(() => {
+          window.location.href = data.redirect_url || "/submissions/";
+        }, 800);
+        return;
+      }
+    } catch (_err) {
+      if (typeof showToast === "function") {
+        showToast("Не удалось отправить форму. Проверьте подключение к сети и попробуйте ещё раз.", "danger");
+      } else {
+        showSummary(form, "Не удалось отправить форму. Проверьте подключение к сети.");
+      }
+      unlockForm(submitBtn);
       return;
     }
 
+    // Серверные ошибки валидации — разблокируем кнопку
+    unlockForm(submitBtn);
     showSummary(form, "Форма содержит ошибки. Проверьте поля с подсветкой.");
 
     for (const [fieldName, errorList] of Object.entries(data.errors || {})) {
@@ -429,6 +471,12 @@ function initSubmissionForm() {
   }
 
   form.addEventListener("submit", async (event) => {
+    // Блокируем повторную отправку пока идёт запрос
+    if (isSubmitting) {
+      event.preventDefault();
+      return;
+    }
+
     const isValid = validateAll(true);
 
     if (!isValid || !form.checkValidity()) {
