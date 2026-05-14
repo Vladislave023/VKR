@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -104,3 +105,37 @@ class Program(models.Model):
 
     def __str__(self):
         return f"{self.education_level} | {self.institute} | {self.specialty}"
+
+
+class ImportLog(models.Model):
+    SOURCE_KUG = "kug"
+    SOURCE_SR = "sr"
+    SOURCE_CHOICES = [
+        (SOURCE_KUG, "Сводный КУГ"),
+        (SOURCE_SR, "Штатная расстановка"),
+    ]
+    STATUS_CHOICES = [
+        ("ok", "Успешно"),
+        ("partial", "Частично"),
+        ("error", "Ошибка"),
+    ]
+
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
+    filename = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    created = models.PositiveIntegerField(default=0)
+    skipped = models.PositiveIntegerField(default=0)
+    errors = models.PositiveIntegerField(default=0)
+    error_log = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ok")
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.get_source_display()} — {self.filename} — {self.uploaded_at:%d.%m.%Y %H:%M}"

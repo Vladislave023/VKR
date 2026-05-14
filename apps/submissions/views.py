@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+
+from apps.references.models import Department
 
 from .forms import SubmissionCreateForm, SubmissionUpdateForm
 from .models import Submission, SubmissionStatus
@@ -11,6 +13,27 @@ from .models import Submission, SubmissionStatus
 def wants_json(request) -> bool:
     accept = request.headers.get("Accept", "")
     return "application/json" in accept or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+@login_required
+def ajax_departments(request: HttpRequest) -> JsonResponse:
+    """Return departments for autocomplete filtered by institute and query text."""
+    institute_id = request.GET.get("institute_id")
+    query = request.GET.get("q", "")
+
+    if not institute_id:
+        return JsonResponse({"results": []})
+    try:
+        institute_pk = int(institute_id)
+    except (TypeError, ValueError):
+        return JsonResponse({"results": []})
+
+    departments = Department.objects.filter(
+        institute_id=institute_pk,
+        name__icontains=query,
+    ).order_by("name")[:20]
+
+    return JsonResponse({"results": [{"id": item.id, "name": item.name} for item in departments]})
 
 
 @login_required

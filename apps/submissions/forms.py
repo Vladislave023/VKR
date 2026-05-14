@@ -16,6 +16,8 @@ from .models import Submission
 
 
 class SubmissionCreateForm(forms.ModelForm):
+    department_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+
     class Meta:
         model = Submission
         fields = [
@@ -38,6 +40,17 @@ class SubmissionCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        data = kwargs.get("data")
+        if data is None and args:
+            data = args[0]
+        if data is not None and data.get("department_id") and not data.get("department"):
+            data = data.copy()
+            data["department"] = data.get("department_id")
+            if args:
+                args = (data, *args[1:])
+            else:
+                kwargs["data"] = data
+
         super().__init__(*args, **kwargs)
 
         for field in self.fields.values():
@@ -53,9 +66,12 @@ class SubmissionCreateForm(forms.ModelForm):
         })
         self.fields["file"].widget.attrs.update({"accept": ".pdf,application/pdf"})
         self.fields["document_type"].queryset = self.fields["document_type"].queryset.exclude(name="ВКР").order_by("name")
+        self.fields["department"].widget = forms.HiddenInput(attrs={"id": "id_department"})
+        self.fields["department_id"].widget.attrs.update({"id": "id_department_id"})
 
         self.fields["department"].queryset = Department.objects.none()
         self.fields["specialty"].queryset = Specialty.objects.none()
+        self.department_display_value = ""
 
         level_id = None
         institute_id = None
@@ -75,6 +91,20 @@ class SubmissionCreateForm(forms.ModelForm):
                 iid = int(institute_id)
                 self.fields["department"].queryset = Department.objects.filter(institute_id=iid).order_by("name")
             except (TypeError, ValueError):
+                pass
+
+        department_id = None
+        if self.data:
+            department_id = self.data.get("department") or self.data.get("department_id")
+        elif getattr(self.instance, "department_id", None):
+            department_id = self.instance.department_id
+
+        if department_id:
+            try:
+                department = Department.objects.get(pk=int(department_id))
+                self.department_display_value = department.name
+                self.fields["department_id"].initial = department.id
+            except (Department.DoesNotExist, TypeError, ValueError):
                 pass
 
         if institute_id and level_id:

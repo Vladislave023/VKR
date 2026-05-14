@@ -1,0 +1,54 @@
+{% extends "references/staff_base.html" %}
+{% block title %}Управление справочниками{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Управление справочниками</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'references:import_list' %}">История импортов</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg">
+    <div class="stat p-3"><div class="text-secondary small">Школ</div><div class="h4 mb-0">{{ institute_count }}</div></div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="stat p-3"><div class="text-secondary small">Кафедр</div><div class="h4 mb-0">{{ department_count }}</div></div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="stat p-3"><div class="text-secondary small">Направлений</div><div class="h4 mb-0">{{ specialty_count }}</div></div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="stat p-3"><div class="text-secondary small">Программ</div><div class="h4 mb-0">{{ program_count }}</div></div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="stat p-3"><div class="text-secondary small">Уровней</div><div class="h4 mb-0">{{ education_level_count }}</div></div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card p-4 h-100">
+      <h2 class="h5">Загрузка сводного КУГ</h2>
+      <form method="post" action="{% url 'references:upload_kug' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input class="form-control mb-3" type="file" name="file" accept=".xlsx" required>
+        <button class="btn btn-success" type="submit">Загрузить</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-4 h-100">
+      <h2 class="h5">Загрузка штатной расстановки</h2>
+      <form method="post" action="{% url 'references:upload_sr' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input class="form-control mb-3" type="file" name="file" accept=".xlsx" required>
+        <button class="btn btn-success" type="submit">Загрузить</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">Последние импорты</h2>
+{% include "references/import_table.html" with imports=latest_imports %}
+
+{% endblock %}

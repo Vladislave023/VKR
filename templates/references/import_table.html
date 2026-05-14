@@ -1,0 +1,40 @@
+<div class="table-responsive">
+  <table class="table table-sm align-middle bg-white">
+    <thead>
+      <tr>
+        <th>Источник</th>
+        <th>Файл</th>
+        <th>Дата</th>
+        <th>Кто загрузил</th>
+        <th>Создано</th>
+        <th>Пропущено</th>
+        <th>Ошибок</th>
+        <th>Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in imports %}
+        <tr>
+          <td>{{ item.get_source_display }}</td>
+          <td><a href="{% url 'references:import_detail' item.pk %}">{{ item.filename }}</a></td>
+          <td>{{ item.uploaded_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ item.uploaded_by|default:"-" }}</td>
+          <td>{{ item.created }}</td>
+          <td>{{ item.skipped }}</td>
+          <td>{{ item.errors }}</td>
+          <td>
+            {% if item.status == "ok" %}
+              <span class="badge text-bg-success">{{ item.get_status_display }}</span>
+            {% elif item.status == "partial" %}
+              <span class="badge text-bg-warning">{{ item.get_status_display }}</span>
+            {% else %}
+              <span class="badge text-bg-danger">{{ item.get_status_display }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="text-secondary">Импортов пока нет.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

@@ -103,7 +103,19 @@
 
           <div class="col-12">
             <label class="form-label">4) {{ form.department.label }}</label>
-            {{ form.department }}
+            <div class="position-relative">
+              <input
+                type="text"
+                id="id_department_autocomplete"
+                class="form-control"
+                value="{{ form.department_display_value }}"
+                autocomplete="off"
+                placeholder="Начните вводить название кафедры или департамента"
+              >
+              {{ form.department }}
+              {{ form.department_id }}
+              <div id="departmentAutocompleteResults" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1020;"></div>
+            </div>
             <div class="form-text">Список кафедр зависит от выбранного института или школы.</div>
             {% for e in form.department.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
@@ -141,5 +153,5 @@
     </div>
   </div>
 </div>
-<script src="{% static 'js/submission_live_validation.js' %}?v=20260429a"></script>
+<script src="{% static 'js/submission_live_validation.js' %}?v=20260514c"></script>
 {% endblock %}

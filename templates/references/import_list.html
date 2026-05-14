@@ -1,0 +1,36 @@
+{% extends "references/staff_base.html" %}
+{% block title %}История импортов{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">История импортов</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'references:dashboard' %}">К справочникам</a>
+</div>
+
+{% include "references/import_table.html" with imports=imports %}
+
+{% if is_paginated %}
+  <nav aria-label="Страницы истории импортов">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Назад</span></li>
+      {% endif %}
+
+      {% for page_number in paginator.page_range %}
+        <li class="page-item {% if page_obj.number == page_number %}active{% endif %}">
+          <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+        </li>
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Вперёд</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+
+{% endblock %}

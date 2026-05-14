@@ -1,0 +1,35 @@
+{% extends "references/staff_base.html" %}
+{% block title %}Импорт {{ import_log.filename }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Импорт справочников</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'references:import_list' %}">Назад к истории</a>
+</div>
+
+<div class="card p-4 mb-4">
+  <dl class="row mb-0">
+    <dt class="col-sm-3">Источник</dt><dd class="col-sm-9">{{ import_log.get_source_display }}</dd>
+    <dt class="col-sm-3">Файл</dt><dd class="col-sm-9">{{ import_log.filename }}</dd>
+    <dt class="col-sm-3">Дата</dt><dd class="col-sm-9">{{ import_log.uploaded_at|date:"d.m.Y H:i" }}</dd>
+    <dt class="col-sm-3">Кто загрузил</dt><dd class="col-sm-9">{{ import_log.uploaded_by|default:"-" }}</dd>
+    <dt class="col-sm-3">Создано</dt><dd class="col-sm-9">{{ import_log.created }}</dd>
+    <dt class="col-sm-3">Пропущено</dt><dd class="col-sm-9">{{ import_log.skipped }}</dd>
+    <dt class="col-sm-3">Ошибок</dt><dd class="col-sm-9">{{ import_log.errors }}</dd>
+    <dt class="col-sm-3">Статус</dt>
+    <dd class="col-sm-9">
+      {% if import_log.status == "ok" %}
+        <span class="badge text-bg-success">{{ import_log.get_status_display }}</span>
+      {% elif import_log.status == "partial" %}
+        <span class="badge text-bg-warning">{{ import_log.get_status_display }}</span>
+      {% else %}
+        <span class="badge text-bg-danger">{{ import_log.get_status_display }}</span>
+      {% endif %}
+    </dd>
+  </dl>
+</div>
+
+<h2 class="h5">Журнал ошибок</h2>
+<pre class="bg-light p-3 rounded">{% if import_log.error_log %}{{ import_log.error_log }}{% else %}Ошибок нет.{% endif %}</pre>
+
+{% endblock %}

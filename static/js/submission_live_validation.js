@@ -156,6 +156,13 @@ function validateRequiredSelect(field, label) {
   return null;
 }
 
+function validateDepartmentAutocomplete(hiddenField, textField) {
+  if (!hiddenField.value || !normalizeSpaces(textField.value)) {
+    return "Выберите кафедру или департамент из списка.";
+  }
+  return null;
+}
+
 function validateFile(field, required = true) {
   const file = field.files && field.files[0];
   if (!file) return required ? "Прикрепите PDF-файл." : null;
@@ -214,17 +221,82 @@ function resetSelect(select) {
   select.appendChild(option);
 }
 
-async function loadDepartments(instituteSelect, departmentSelect) {
-  resetSelect(departmentSelect);
-  if (!instituteSelect.value) return;
+function debounce(callback, delay = 300) {
+  let timer = null;
+  return (...args) => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => callback(...args), delay);
+  };
+}
 
-  const data = await fetchJson(`/references/api/departments/?institute_id=${encodeURIComponent(instituteSelect.value)}`);
-  for (const item of data.results || []) {
-    const option = document.createElement("option");
-    option.value = String(item.id);
-    option.textContent = item.name;
-    departmentSelect.appendChild(option);
+function hideDepartmentResults(resultsBox) {
+  resultsBox.innerHTML = "";
+  resultsBox.classList.add("d-none");
+}
+
+function clearDepartmentChoice(departmentHidden, departmentIdHidden, departmentInput, resultsBox) {
+  departmentHidden.value = "";
+  departmentIdHidden.value = "";
+  departmentInput.value = "";
+  hideDepartmentResults(resultsBox);
+}
+
+function selectDepartment(item, departmentHidden, departmentIdHidden, departmentInput, resultsBox) {
+  const id = String(item.id);
+  departmentHidden.value = id;
+  departmentIdHidden.value = id;
+  departmentInput.value = item.name;
+  hideDepartmentResults(resultsBox);
+}
+
+function renderDepartmentResults(items, departmentHidden, departmentIdHidden, departmentInput, resultsBox) {
+  resultsBox.innerHTML = "";
+
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "list-group-item text-secondary small";
+    empty.textContent = "Ничего не найдено";
+    resultsBox.appendChild(empty);
+    resultsBox.classList.remove("d-none");
+    return;
   }
+
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "list-group-item list-group-item-action";
+    button.textContent = item.name;
+
+    const choose = (event) => {
+      event.preventDefault();
+      selectDepartment(item, departmentHidden, departmentIdHidden, departmentInput, resultsBox);
+      clearFieldError(departmentInput);
+      const submit = departmentInput.form?.querySelector('button[type="submit"]');
+      if (submit) {
+        submit.disabled = !departmentInput.form.checkValidity();
+      }
+    };
+
+    button.addEventListener("pointerdown", choose);
+    button.addEventListener("mousedown", choose);
+    button.addEventListener("click", choose);
+    resultsBox.appendChild(button);
+  }
+
+  resultsBox.classList.remove("d-none");
+}
+
+async function loadDepartmentSuggestions(instituteSelect, departmentHidden, departmentIdHidden, departmentInput, resultsBox) {
+  const query = normalizeSpaces(departmentInput.value);
+
+  if (!instituteSelect.value) {
+    hideDepartmentResults(resultsBox);
+    return;
+  }
+
+  const url = `/submissions/ajax/departments/?institute_id=${encodeURIComponent(instituteSelect.value)}&q=${encodeURIComponent(query)}`;
+  const data = await fetchJson(url);
+  renderDepartmentResults(data.results || [], departmentHidden, departmentIdHidden, departmentInput, resultsBox);
 }
 
 async function loadSpecialties(levelSelect, instituteSelect, specialtySelect) {
@@ -266,12 +338,15 @@ function initSubmissionForm() {
   const institute = document.getElementById("id_institute");
   const specialty = document.getElementById("id_specialty");
   const department = document.getElementById("id_department");
+  const departmentId = document.getElementById("id_department_id");
+  const departmentInput = document.getElementById("id_department_autocomplete");
+  const departmentResults = document.getElementById("departmentAutocompleteResults");
   const file = document.getElementById("id_file");
   const clearFileBtn = document.getElementById("clearFileBtn");
   const submitBtn = form.querySelector('button[type="submit"]');
   const fileRequired = form.dataset.fileRequired !== "0";
 
-  if (!author || !supervisor || !title || !year || !pages || !documentType || !level || !institute || !specialty || !department || !file) {
+  if (!author || !supervisor || !title || !year || !pages || !documentType || !level || !institute || !specialty || !department || !departmentId || !departmentInput || !departmentResults || !file) {
     return;
   }
 
@@ -289,7 +364,7 @@ function initSubmissionForm() {
     [level, () => validateRequiredSelect(level, "уровень образования")],
     [institute, () => validateRequiredSelect(institute, "институт/школу")],
     [specialty, () => validateRequiredSelect(specialty, "направление подготовки")],
-    [department, () => validateRequiredSelect(department, "кафедру/департамент")],
+    [departmentInput, () => validateDepartmentAutocomplete(department, departmentInput)],
     [file, () => validateFile(file, fileRequired)],
   ]);
 
@@ -344,6 +419,30 @@ function initSubmissionForm() {
     });
   }
 
+  const debouncedDepartmentSearch = debounce(async () => {
+    try {
+      await loadDepartmentSuggestions(institute, department, departmentId, departmentInput, departmentResults);
+    } catch {
+      setFieldError(departmentInput, "Не удалось загрузить список кафедр.");
+    }
+  }, 300);
+
+  departmentInput.addEventListener("input", () => {
+    department.value = "";
+    departmentId.value = "";
+    debouncedDepartmentSearch();
+  });
+  departmentInput.addEventListener("focus", async () => {
+    try {
+      await loadDepartmentSuggestions(institute, department, departmentId, departmentInput, departmentResults);
+    } catch {
+      setFieldError(departmentInput, "Не удалось загрузить список кафедр.");
+    }
+  });
+  departmentInput.addEventListener("blur", () => {
+    window.setTimeout(() => hideDepartmentResults(departmentResults), 150);
+  });
+
   level.addEventListener("change", async () => {
     resetSelect(specialty);
     try {
@@ -356,15 +455,13 @@ function initSubmissionForm() {
   });
 
   institute.addEventListener("change", async () => {
-    resetSelect(department);
+    clearDepartmentChoice(department, departmentId, departmentInput, departmentResults);
     resetSelect(specialty);
 
     try {
-      if (institute.value) {
-        await loadDepartments(institute, department);
-      }
+      await loadDepartmentSuggestions(institute, department, departmentId, departmentInput, departmentResults);
     } catch {
-      setFieldError(department, "Не удалось загрузить список кафедр.");
+      setFieldError(departmentInput, "Не удалось загрузить список кафедр.");
     }
 
     try {
@@ -458,7 +555,9 @@ function initSubmissionForm() {
     showSummary(form, "Форма содержит ошибки. Проверьте поля с подсветкой.");
 
     for (const [fieldName, errorList] of Object.entries(data.errors || {})) {
-      const input = document.getElementById(`id_${fieldName}`);
+      const input = fieldName === "department"
+        ? departmentInput
+        : document.getElementById(`id_${fieldName}`);
       if (!input) continue;
 
       touch(input);

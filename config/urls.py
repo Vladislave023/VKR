@@ -7,7 +7,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     path("", include("apps.users.urls")),
-    path("references/", include("apps.references.urls")),
+    path("staff/", include("apps.references.urls", namespace="references")),
+    path("references/", include("apps.references.urls", namespace="references_api")),
     path("submissions/", include("apps.submissions.urls")),  # ✅ ВОТ ЭТОГО НЕ ХВАТАЕТ
 ]
 
